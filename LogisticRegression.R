@@ -1,0 +1,82 @@
+#Step 2 (Slide 12): Use sigmoid (logistic) function
+sigmoid <- function(x, beta0, beta1) {
+  return (1/(1+exp(1)^(-beta0-beta1*x)))
+}
+
+#Step 3 (Slide 14): Define the cost function
+costFunction <- function(Y, `P(y=1|x)`) {
+  return ((-1)*(Y*log(`P(y=1|x)`)+(1-Y)*log(1-`P(y=1|x)`)))
+}
+
+gradientDescent <- function(train_data, beta0, beta1) {
+  #Step 2 (Slide 13): Use sigmoid function using an intial guess for the parameters beta0 = 0.5 and beta1 = 0.3.
+  train_data <- cbind(train_data, "P(y=1|x)" = sigmoid(train_data$X1, beta0, beta1))
+  
+  #Step 3 (Slide 15): Compute the cost function.
+  train_data <- cbind(train_data, "Cost" = costFunction(train_data$Y, train_data$`P(y=1|x)`))
+  
+  #Step 3 (Slide 19): Compute the total cost.
+  totalCost <- sum(train_data[,"Cost"])
+  
+  #Gradient Descent (Slide 29): Compute the first partial derivatives of the error function J for β0
+  train_data <- cbind(train_data, "dJ/dbeta0" = gradientDescentBeta0(train_data$X1, train_data$Y, beta0, beta1))
+  
+  #Gradient Descent (Slide 29): Compute the first partial derivatives of the error function J for β1
+  train_data <- cbind(train_data, "dJ/dbeta1" = gradientDescentBeta1(train_data$X1, train_data$Y, beta0, beta1))
+}
+
+#Gradient Descent - computes partial derivatives of error function J for beta0
+gradientDescentBeta0 <- function(x, y, beta0, beta1) {
+  return (y-((exp(beta0+(beta1 * x)))/(1+exp(beta0 + (beta1 * x)))))
+}
+
+#Gradient Descent - computes partial derivatives of error function J for beta0
+gradientDescentBeta1 <- function(x, y, beta0, beta1) {
+  return (x*(y-((exp(beta0+(beta1 * x)))/(1+exp(beta0 + (beta1 * x))))))
+}
+
+#Input data from the slides
+train_data <- data.frame(index = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"),
+                         Y = c(0L, 0L, 0L, 0L, 1L, 1L, 1L, 1L, 1L, 0L),
+                         X1 = c(2, 2.8, 1.5, 2.1, 5.5, 8, 6.9, 8.5, 2.5, 7.7),
+                         X2 = c(1.5, 1.2, 1, 1, 4, 4.8, 4.5, 5.5, 2, 3.5))
+#Step 1 (Slide 11): Scale the independent variables (z-Score)
+train_data[,3:4] <- scale(train_data[,3:4], center = TRUE, scale = TRUE)
+#Select and load all needed variables.
+train_data <- train_data[,2:3]
+beta0 <- 0.5
+beta1 <- 0.3
+learningRate <- 0.01
+convergence <- 0.0001
+n <- 0
+convergenceReached <- FALSE
+
+
+#Gradient Descent (Slide 27 ff) iterative process 
+while (!convergenceReached & n < 10000) {
+  #Iteration counter to prevent deadlock
+  n <- n+1
+  #Calculate sigmoid and cost function
+  roundResults <- gradientDescent(train_data, beta0, beta1)
+  
+  #Calculate first derivatives (Slide 27) and their sums (Slide 29)
+  `totaldJ/dbeta0` <- sum(roundResults[, "dJ/dbeta0"])
+  `totaldJ/dbeta1` <- sum(roundResults[, "dJ/dbeta1"])
+  
+  #Calculate the next values for betas (Slide 34)
+  `beta0n+1` <- beta0 + learningRate * `totaldJ/dbeta0`
+  `beta1n+1` <- beta1 + learningRate * `totaldJ/dbeta1`
+  
+  #Check whether convergence is reached, if not continue
+  if (abs(`beta0n+1`/beta0 -1) < convergence & abs(`beta1n+1`/beta1-1) < convergence) {
+    convergenceReached <- TRUE
+  }
+  
+  #Store the new betas in place of the old ones, repeat.
+  beta0 <- `beta0n+1`
+  beta1 <- `beta1n+1`
+}
+
+#Prints the sigmoid curve and the points from the dataset
+curve(expr=sigmoid(x, beta0, beta1), from=-2, to=2, xlab = "x1", ylab = "y", xlim=c(-2,2), ylim=c(-0.1,1.1))
+points(x = roundResults[,"X1"], y= roundResults[, "Y"])
