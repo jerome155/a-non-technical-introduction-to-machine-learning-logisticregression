@@ -70,6 +70,8 @@ train_data[,3:4] <- scale(train_data[,3:4], center = TRUE, scale = TRUE)
 train_data <- train_data[,2:3]
 beta0 <- 0.5
 beta1 <- 0.3
+#beta0 <- 0.029
+#beta1 <- 1.41
 learningRate <- 0.01
 convergence <- 0.0001
 n <- 0
@@ -79,7 +81,7 @@ convergenceReached <- FALSE
 
 ```{r}
 #Gradient Descent (Slide 27 ff) iterative process 
-while (!convergenceReached & n < 10000) {
+while (!convergenceReached & n < 1) {
   #Iteration counter to prevent deadlock
   n <- n+1
   #Calculate sigmoid and cost function
